@@ -11,6 +11,8 @@
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <!-- Supabase JS CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- SheetJS CDN (Excel Export) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <!-- Google Font: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,11 +30,36 @@
       }
     }
   </script>
+
+  <style>
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white;
+        color: black;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 15mm;
+      }
+    }
+  </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-slate-900 selection:text-white">
 
   <!-- TOPBAR GURU (SMANIDA SLATE) -->
-  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs print:hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl shadow-xs">
@@ -52,13 +79,13 @@
         <div id="btnAdminLinkWadah" class="hidden">
           <a href="./admin.html" class="flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition border border-slate-200/60">
             <i class="ph ph-shield-check text-base"></i>
-            <span class="hidden sm:inline">Panel Admin</span>
+            <span class="hidden sm:inline">Admin</span>
           </a>
         </div>
         <a href="./myprofile.html" class="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 transition border border-slate-200/60">
-  <i class="ph ph-user-gear text-base"></i>
-  <span class="hidden sm:inline">Profil Saya</span>
-</a>
+          <i class="ph ph-user-gear text-base"></i>
+          <span class="hidden sm:inline">Profil Saya</span>
+        </a>
         <button id="logoutBtn" class="flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-white px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 transition">
           <i class="ph ph-sign-out text-base"></i>
           <span class="hidden sm:inline">Keluar</span>
@@ -68,7 +95,7 @@
   </header>
 
   <!-- KONTEN UTAMA -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6 print:hidden">
 
     <!-- BANNER RINGKASAN GURU -->
     <div class="bg-slate-900 text-white rounded-3xl p-6 shadow-md border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -103,12 +130,19 @@
       
       <!-- FORM INPUT JURNAL HARIAN BESERTA ABSENSI SISWA -->
       <section class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
-          <span class="w-2 h-5 bg-slate-900 rounded-full"></span>
-          <div>
-            <h3 class="text-sm font-bold text-slate-900">Input Jurnal & Presensi Siswa</h3>
-            <p class="text-[11px] text-slate-400">Pilih kelas di bawah untuk memunculkan daftar siswa</p>
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-5 bg-slate-900 rounded-full"></span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">Input Jurnal & Presensi</h3>
+              <p class="text-[11px] text-slate-400">Pilih kelas di bawah untuk memunculkan daftar siswa</p>
+            </div>
           </div>
+          <!-- FITUR 2: SALIN DARI PERTEMUAN TERAKHIR -->
+          <button type="button" onclick="salinJurnalTerakhir()" title="Salin materi dan uraian dari jurnal pertemuan terakhir" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition shadow-2xs">
+            <i class="ph ph-copy text-sm text-amber-600"></i>
+            <span>Salin Jurnal Kemarin</span>
+          </button>
         </div>
 
         <form id="formJurnal" class="space-y-4">
@@ -130,7 +164,7 @@
             </select>
           </div>
 
-          <!-- DAFTAR SISWA KELAS (2x Lebih Panjang Kebawah) -->
+          <!-- DAFTAR SISWA KELAS (2x Lebih Panjang) -->
           <div id="boxPresensiSiswa" class="hidden p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
             <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
               <div>
@@ -142,7 +176,7 @@
               </button>
             </div>
 
-            <!-- Wadah Baris Siswa -->
+            <!-- Wadah Baris Siswa (Tinggi) -->
             <div id="wadahListSiswaAbsen" class="space-y-2 max-h-[480px] overflow-y-auto pr-1 text-xs">
               <p class="text-slate-400 text-center py-4">Pilih kelas di atas terlebih dahulu.</p>
             </div>
@@ -174,16 +208,28 @@
         </form>
       </section>
 
-      <!-- RIWAYAT LOG JURNAL (10 Data per Halaman, Bebas Scroll, Warna Berbeda per Kartu) -->
+      <!-- RIWAYAT LOG JURNAL & TOOLBAR EKSPOR (FITUR 1) -->
       <section class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
             <h3 class="text-sm font-bold text-slate-900">Riwayat Jurnal Mengajar Anda</h3>
-            <p class="text-xs text-slate-400">10 data terbaru per halaman dengan latar warna berbeda per kartu</p>
+            <p class="text-xs text-slate-400">10 data per halaman dengan latar warna berbeda per kartu</p>
           </div>
-          <button onclick="loadRiwayatJurnal()" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 transition self-start sm:self-auto">
-            <i class="ph ph-arrow-clockwise"></i> Segarkan
-          </button>
+          
+          <!-- TOMBOL EKSPOR (EXCEL & CETAK LAPORAN RESMI) -->
+          <div class="flex items-center gap-2">
+            <button onclick="eksporKeExcel()" title="Unduh rekap jurnal ke format Excel (.xlsx)" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-2xs">
+              <i class="ph ph-file-xls text-sm"></i>
+              <span class="hidden sm:inline">Unduh Excel</span>
+            </button>
+            <button onclick="cetakLaporanResmi()" title="Cetak format laporan resmi A4 / Simpan PDF" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition shadow-2xs">
+              <i class="ph ph-printer text-sm"></i>
+              <span class="hidden sm:inline">Cetak Rekap</span>
+            </button>
+            <button onclick="loadRiwayatJurnal()" title="Segarkan Data" class="text-xs font-bold text-slate-700 hover:text-slate-900 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition">
+              <i class="ph ph-arrow-clockwise text-base"></i>
+            </button>
+          </div>
         </div>
 
         <!-- Toolbar Pencarian & Filter Kelas -->
@@ -199,7 +245,7 @@
           </div>
         </div>
 
-        <!-- Wadah Kartu Riwayat Jurnal -->
+        <!-- Wadah Kartu Riwayat Jurnal (Utuh 10 Data Tanpa Scroll) -->
         <div id="wadahRiwayatCards" class="space-y-4">
           <div class="py-12 text-center text-slate-400 text-xs">
             <i class="ph ph-spinner animate-spin text-lg block mb-1"></i> Memuat riwayat...
@@ -221,7 +267,7 @@
   </main>
 
   <!-- MODAL EDIT JURNAL MENGAJAR & PRESENSI -->
-  <div id="modalEditJurnal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+  <div id="modalEditJurnal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 print:hidden">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto">
       <button onclick="tutupModalEditJurnal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-lg">✕</button>
       <h3 class="text-sm font-bold text-slate-900 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
@@ -298,6 +344,84 @@
     </div>
   </div>
 
+  <!-- AREA CETAK LAPORAN RESMI KBM (HANYA TERLIHAT SAAT PRINT / CETAK PDF) -->
+  <div id="printArea" class="hidden print:block font-serif text-black">
+    <!-- Kop Surat Resmi -->
+    <div class="flex items-center justify-between border-b-4 border-double border-black pb-3 mb-4">
+      <img src="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png" alt="Logo" class="w-20 h-20 object-contain">
+      <div class="text-center flex-1 px-4">
+        <h3 class="text-xs uppercase tracking-wider font-bold">Pemerintah Daerah Provinsi Jawa Barat</h3>
+        <h3 class="text-xs uppercase tracking-wider font-bold">Dinas Pendidikan</h3>
+        <h2 class="text-lg font-black uppercase">SMA NEGERI 1 CIDAHU</h2>
+        <p class="text-[10px] font-sans text-gray-700">Jl. Kertawinangun No. 09, Kec. Cidahu, Kab. Kuningan, Jawa Barat 45595</p>
+        <p class="text-[10px] font-sans text-gray-700">Website: sman1cidahu.sch.id • Email: smansatucidahu@gmail.com</p>
+      </div>
+      <div class="w-20"></div>
+    </div>
+
+    <!-- Judul Dokumen -->
+    <div class="text-center mb-6">
+      <h3 class="text-sm font-bold uppercase underline tracking-wide">JURNAL PELAKSANAAN KEGIATAN BELAJAR MENGAJAR (KBM)</h3>
+      <p id="printPeriodeInfo" class="text-xs mt-1 text-gray-800 font-sans"></p>
+    </div>
+
+    <!-- Identitas Guru -->
+    <table class="w-full text-xs mb-4 font-sans">
+      <tr>
+        <td class="w-28 font-bold py-0.5">Nama Guru</td>
+        <td class="w-3 py-0.5">:</td>
+        <td id="printNamaGuru" class="py-0.5 font-bold">-</td>
+        <td class="w-28 font-bold py-0.5">Tahun Pelajaran</td>
+        <td class="w-3 py-0.5">:</td>
+        <td class="py-0.5">2026/2027</td>
+      </tr>
+      <tr>
+        <td class="font-bold py-0.5">NIP / NUPTK</td>
+        <td class="py-0.5">:</td>
+        <td id="printNipGuru" class="py-0.5 font-mono">-</td>
+        <td class="font-bold py-0.5">Filter Rombel</td>
+        <td class="py-0.5">:</td>
+        <td id="printKelasInfo" class="py-0.5 font-bold">Semua Kelas</td>
+      </tr>
+    </table>
+
+    <!-- Tabel Rekap Data -->
+    <table class="w-full text-[11px] border-collapse border border-black font-sans mb-8">
+      <thead>
+        <tr class="bg-gray-100 text-center font-bold">
+          <th class="border border-black p-1.5 w-8">No</th>
+          <th class="border border-black p-1.5 w-24">Tanggal / Jam</th>
+          <th class="border border-black p-1.5 w-16">Kelas</th>
+          <th class="border border-black p-1.5 w-32">Mata Pelajaran</th>
+          <th class="border border-black p-1.5">Materi Pokok / Capaian Pembelajaran</th>
+          <th class="border border-black p-1.5 w-20">Kehadiran</th>
+          <th class="border border-black p-1.5 w-32">Siswa Tidak Hadir</th>
+        </tr>
+      </thead>
+      <tbody id="printTabelBody">
+        <!-- Disuntikkan secara dinamis melalui JavaScript -->
+      </tbody>
+    </table>
+
+    <!-- Kolom Tanda Tangan Resmi -->
+    <div class="grid grid-cols-2 text-xs text-center font-sans mt-8 break-inside-avoid">
+      <div>
+        <p>Mengetahui,</p>
+        <p class="font-bold">Kepala SMA Negeri 1 Cidahu</p>
+        <div class="h-16"></div>
+        <p class="font-bold underline">Abdul Rofik, M.Pd.</p>
+        <p class="text-[10px]">NIP. 196707301991011001</p>
+      </div>
+      <div>
+        <p id="printTglTtd">Cidahu, ......................... 2026</p>
+        <p class="font-bold">Guru Mata Pelajaran,</p>
+        <div class="h-16"></div>
+        <p id="printTtdNamaGuru" class="font-bold underline">-</p>
+        <p id="printTtdNipGuru" class="text-[10px]">NIP. -</p>
+      </div>
+    </div>
+  </div>
+
   <script src="./js/config.js"></script>
   <script>
     let currentUser = null;
@@ -307,11 +431,9 @@
     let listSiswaKelasAktif = [];
     let listSiswaEditModal = [];
 
-    // Paginasi 10 Data per Halaman
     let riwayatCurrentPage = 1;
     const riwayatPageSize = 10;
 
-    // Palet warna kartu
     const cardThemePalette = [
       { bg: 'bg-white', border: 'border-slate-300/80', badgeKelas: 'bg-slate-900 text-white', accentText: 'text-slate-800' },
       { bg: 'bg-blue-50/70', border: 'border-blue-200', badgeKelas: 'bg-blue-800 text-white', accentText: 'text-blue-900' },
@@ -357,7 +479,7 @@
       await loadRiwayatJurnal();
     }
 
-    // 2. Logout
+    // 2. Tombol Keluar
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await db.auth.signOut();
       localStorage.removeItem('kbm_user_profile');
@@ -376,7 +498,7 @@
       setTimeout(() => t.classList.add('hidden'), 4000);
     }
 
-    // 4. Muat Penugasan Guru & Filter
+    // 4. Muat Penugasan Guru
     async function loadPenugasanSaya() {
       const selectEl = document.getElementById('selectPenugasan');
       const filterKelasEl = document.getElementById('filterKelasRiwayat');
@@ -417,7 +539,21 @@
         uniqueKelas.map(k => `<option value="${k}">Kelas ${k}</option>`).join('');
     }
 
-    // 5. Pilih Kelas & Load Siswa
+    // FITUR 2: SALIN JURNAL DARI PERTEMUAN TERAKHIR
+    function salinJurnalTerakhir() {
+      if (!listJurnalGlobal || !listJurnalGlobal.length) {
+        notify('Belum ada riwayat jurnal sebelumnya untuk disalin.', false);
+        return;
+      }
+
+      const jurnalTerakhir = listJurnalGlobal[0]; // Data paling mutakhir
+      document.getElementById('materi').value = jurnalTerakhir.materi_pokok || '';
+      document.getElementById('catatan').value = jurnalTerakhir.keterangan_absen || '';
+
+      notify(`Materi dari pertemuan terakhir (Kelas ${jurnalTerakhir.kelas}) berhasil disalin!`);
+    }
+
+    // 5. Pilih Kelas & Load Siswa (2x Lebih Panjang)
     async function tanganiGantiKelas() {
       const selectEl = document.getElementById('selectPenugasan');
       const boxPresensi = document.getElementById('boxPresensiSiswa');
@@ -506,7 +642,7 @@
       hitungRingkasanAbsen();
     }
 
-    // 6. Simpan Jurnal Mengajar & Absensi Baru (CREATE)
+    // 6. Simpan Jurnal & Absensi (CREATE)
     document.getElementById('formJurnal').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnSimpanJurnal');
@@ -601,7 +737,6 @@
         return;
       }
 
-      // Ambil absensi siswa yang TIDAK HADIR
       const jurnalIds = dataJurnal.map(j => j.id);
       const { data: dataAbsensi } = await db
         .from('absensi_kbm_siswa')
@@ -802,7 +937,6 @@
       wadah.innerHTML = `<p class="text-slate-400 text-center py-3"><i class="ph ph-spinner animate-spin"></i> Memuat presensi siswa...</p>`;
       document.getElementById('modalEditJurnal').classList.remove('hidden');
 
-      // Ambil daftar siswa kelas tersebut
       const { data: siswaKelas } = await db
         .from('profil_pengguna')
         .select('id, nama_lengkap, nomor_induk')
@@ -810,7 +944,6 @@
         .eq('kelas', jurnal.kelas)
         .order('nama_lengkap', { ascending: true });
 
-      // Ambil status presensi yang sudah tersimpan
       const { data: presensiData } = await db
         .from('absensi_kbm_siswa')
         .select('siswa_id, status')
@@ -910,16 +1043,13 @@
       };
 
       try {
-        // A. Update tabel jurnal_mengajar
-        const { data: resUpdate, error: errUpdate } = await db
+        const { error: errUpdate } = await db
           .from('jurnal_mengajar')
           .update(payloadUpdate)
-          .eq('id', id)
-          .select();
+          .eq('id', id);
 
         if (errUpdate) throw errUpdate;
 
-        // B. Update rincian presensi siswa: Hapus rekaman lama lalu buat baru
         if (listSiswaEditModal.length > 0) {
           await db.from('absensi_kbm_siswa').delete().eq('jurnal_id', id);
 
@@ -959,6 +1089,89 @@
           notify('Gagal menghapus: ' + error.message, false);
         }
       }
+    }
+
+    // FITUR 1A: EKSPOR REKAP KE EXCEL (.XLSX)
+    function eksporKeExcel() {
+      if (!listJurnalFiltered || !listJurnalFiltered.length) {
+        notify('Tidak ada data jurnal untuk diekspor.', false);
+        return;
+      }
+
+      const rows = listJurnalFiltered.map((j, idx) => {
+        const daftarAbsen = j.siswa_tidak_hadir && j.siswa_tidak_hadir.length > 0
+          ? j.siswa_tidak_hadir.map(s => `${s.nama} (${s.status})`).join(', ')
+          : (j.jumlah_tidak_hadir > 0 ? `${j.jumlah_tidak_hadir} siswa tidak hadir` : '-');
+
+        return {
+          "No": idx + 1,
+          "Tanggal": j.tanggal,
+          "Jam Ke": j.jam_ke,
+          "Kelas": j.kelas,
+          "Mata Pelajaran": j.mata_pelajaran,
+          "Materi Pokok / Capaian": j.materi_pokok,
+          "Jumlah Hadir": j.jumlah_hadir || 0,
+          "Jumlah Absen": j.jumlah_tidak_hadir || 0,
+          "Siswa Tidak Hadir": daftarAbsen,
+          "Catatan KBM": j.keterangan_absen || '-'
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Jurnal KBM");
+
+      const filterKelas = document.getElementById('filterKelasRiwayat').value;
+      const namaFile = `Rekap_Jurnal_KBM_${currentUser.nama_lengkap.replace(/[^a-zA-Z0-9]/g, '_')}_${filterKelas}.xlsx`;
+      XLSX.writeFile(workbook, namaFile);
+      notify('File Excel berhasil diunduh!');
+    }
+
+    // FITUR 1B: CETAK FORMAT RESMI SIAP TANDA TANGAN (A4)
+    function cetakLaporanResmi() {
+      if (!listJurnalFiltered || !listJurnalFiltered.length) {
+        notify('Tidak ada data jurnal untuk dicetak.', false);
+        return;
+      }
+
+      const filterKelas = document.getElementById('filterKelasRiwayat').value;
+      document.getElementById('printNamaGuru').textContent = currentUser.nama_lengkap;
+      document.getElementById('printNipGuru').textContent = currentUser.nomor_induk || '-';
+      document.getElementById('printKelasInfo').textContent = filterKelas === 'semua' ? 'Semua Rombel Terpilih' : `Kelas ${filterKelas}`;
+      
+      document.getElementById('printTtdNamaGuru').textContent = currentUser.nama_lengkap;
+      document.getElementById('printTtdNipGuru').textContent = currentUser.nomor_induk ? `NIP. ${currentUser.nomor_induk}` : '-';
+
+      const tglHariIni = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      document.getElementById('printTglTtd').textContent = `Cidahu, ${tglHariIni}`;
+      document.getElementById('printPeriodeInfo').textContent = `Periode: Dicetak per ${tglHariIni}`;
+
+      const tbody = document.getElementById('printTabelBody');
+      tbody.innerHTML = listJurnalFiltered.map((j, idx) => {
+        const daftarAbsen = j.siswa_tidak_hadir && j.siswa_tidak_hadir.length > 0
+          ? j.siswa_tidak_hadir.map(s => `<div>• ${s.nama} <b>(${s.status})</b></div>`).join('')
+          : (j.jumlah_tidak_hadir > 0 ? `${j.jumlah_tidak_hadir} siswa absen` : '<span class="text-gray-400">Nihil</span>');
+
+        return `
+          <tr class="align-top">
+            <td class="border border-black p-1.5 text-center">${idx + 1}</td>
+            <td class="border border-black p-1.5 whitespace-nowrap">${j.tanggal}<br><span class="text-[10px] text-gray-600">Jam: ${j.jam_ke}</span></td>
+            <td class="border border-black p-1.5 text-center font-bold">${j.kelas}</td>
+            <td class="border border-black p-1.5">${j.mata_pelajaran}</td>
+            <td class="border border-black p-1.5">
+              <div class="font-bold">${j.materi_pokok}</div>
+              ${j.keterangan_absen ? `<div class="text-[10px] italic text-gray-700 mt-1">Catatan: ${j.keterangan_absen}</div>` : ''}
+            </td>
+            <td class="border border-black p-1.5 text-center">
+              <b>${j.jumlah_hadir || 0}</b> H<br>
+              ${j.jumlah_tidak_hadir > 0 ? `<span class="text-red-700"><b>${j.jumlah_tidak_hadir}</b> A</span>` : ''}
+            </td>
+            <td class="border border-black p-1.5 text-[10px]">${daftarAbsen}</td>
+          </tr>
+        `;
+      }).join('');
+
+      window.print();
     }
 
     // Inisialisasi awal
