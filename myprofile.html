@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil Saya | SMAN 1 Cidahu</title>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png">
+
+  <!-- Tailwind CSS CDN & Phosphor Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+
+  <!-- TOPBAR -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl shadow-xs">
+          <img src="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png" alt="Logo SMAN 1 Cidahu" class="w-7 h-7 object-contain">
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold text-slate-900 leading-none">PENGATURAN AKUN</h1>
+          <span class="text-[11px] text-slate-400 font-medium">SMAN 1 Cidahu Kuningan</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnKembali" onclick="kembaliKeDashboard()" class="flex items-center gap-1.5 text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200/80 transition border border-slate-200/60">
+          <i class="ph ph-arrow-left text-base"></i>
+          <span>Kembali</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KONTEN UTAMA -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6">
+
+    <!-- BANNER IDENTITAS PENGGUNA -->
+    <div class="bg-slate-900 text-white rounded-3xl p-6 shadow-md border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0 shadow-inner">
+          <i class="ph ph-user text-3xl"></i>
+        </div>
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-semibold mb-1 border border-slate-700">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span id="badgePeran" class="uppercase">Memuat peran...</span>
+          </div>
+          <h2 id="topNamaLengkap" class="text-lg sm:text-xl font-black tracking-tight">Memuat nama...</h2>
+          <p id="topEmail" class="text-xs text-slate-400 font-mono mt-0.5">-</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFIKASI TOAST -->
+    <div id="toastBox" class="hidden p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-md transition-all">
+      <span id="toastMsg">Notifikasi</span>
+      <button onclick="document.getElementById('toastBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- FORM 1: BIODATA PROFIL -->
+      <section class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+          <span class="w-2 h-5 bg-slate-900 rounded-full"></span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Biodata Pengguna</h3>
+            <p class="text-[11px] text-slate-400">Identitas diri Anda di portal KBM</p>
+          </div>
+        </div>
+
+        <form id="formBiodata" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap & Gelar</label>
+            <input type="text" id="inputNama" required class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition font-medium">
+            <span class="text-[10px] text-slate-400 mt-1 block">Bapak/Ibu Guru dapat memperbarui gelar akademik di sini.</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Induk (NIP / NISN)</label>
+            <input type="text" id="inputNomorInduk" readonly class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 font-mono outline-none cursor-not-allowed">
+            <span class="text-[10px] text-slate-400 mt-1 block">Terkunci secara otomatis oleh sistem legalitas sekolah.</span>
+          </div>
+
+          <div id="boxFieldRombel" class="hidden">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Rombel Kelas</label>
+            <input type="text" id="inputKelas" readonly class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 font-bold outline-none cursor-not-allowed">
+          </div>
+
+          <div id="boxFieldTugas" class="hidden">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Tugas Tambahan</label>
+            <input type="text" id="inputTugas" readonly class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-100 text-slate-500 outline-none cursor-not-allowed">
+          </div>
+
+          <button type="submit" id="btnSimpanBiodata" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 active:scale-[0.99]">
+            <i class="ph ph-check-circle text-base"></i> Simpan Nama Lengkap
+          </button>
+        </form>
+      </section>
+
+      <!-- FORM 2: GANTI KATA SANDI -->
+      <section class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+          <span class="w-2 h-5 bg-amber-500 rounded-full"></span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Ganti Kata Sandi</h3>
+            <p class="text-[11px] text-slate-400">Amankan akun Anda dari kata sandi default</p>
+          </div>
+        </div>
+
+        <form id="formGantiPassword" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kata Sandi Baru</label>
+            <div class="relative">
+              <input type="password" id="passBaru" required placeholder="Minimal 6 karakter" class="w-full text-xs p-3 pr-10 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+              <button type="button" onclick="togglePassVisibility('passBaru', 'iconPass1')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                <i id="iconPass1" class="ph ph-eye text-base"></i>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Konfirmasi Kata Sandi Baru</label>
+            <div class="relative">
+              <input type="password" id="konfirmPassBaru" required placeholder="Ulangi kata sandi baru" class="w-full text-xs p-3 pr-10 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+              <button type="button" onclick="togglePassVisibility('konfirmPassBaru', 'iconPass2')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600">
+                <i id="iconPass2" class="ph ph-eye text-base"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-3 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-800 leading-relaxed">
+            <span class="font-bold">Tips Keamanan:</span> Jangan gunakan tanggal lahir atau kombinasi angka berurutan yang mudah ditebak siswa lain.
+          </div>
+
+          <button type="submit" id="btnSimpanPassword" class="w-full mt-2 bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-1.5 active:scale-[0.99]">
+            <i class="ph ph-lock-key text-base"></i> Perbarui Kata Sandi
+          </button>
+        </form>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="./js/config.js"></script>
+  <script>
+    let currentUser = null;
+
+    // 1. Notifikasi Toast
+    function notify(pesan, sukses = true) {
+      const t = document.getElementById('toastBox');
+      const m = document.getElementById('toastMsg');
+      m.textContent = pesan;
+      t.className = sukses 
+        ? "p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm bg-emerald-50 text-emerald-800 border border-emerald-200"
+        : "p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm bg-rose-50 text-rose-800 border border-rose-200";
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 4000);
+    }
+
+    // 2. Tampilkan/Sembunyikan Kata Sandi
+    function togglePassVisibility(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'ph ph-eye-slash text-base';
+      } else {
+        input.type = 'password';
+        icon.className = 'ph ph-eye text-base';
+      }
+    }
+
+    // 3. Tombol Kembali Dinamis Sesuai Peran
+    function kembaliKeDashboard() {
+      if (!currentUser) {
+        window.location.href = './index.html';
+        return;
+      }
+      if (currentUser.peran_utama === 'admin') {
+        window.location.href = './admin.html';
+      } else if (currentUser.peran_utama === 'siswa') {
+        window.location.href = './siswa.html';
+      } else {
+        window.location.href = './guru.html';
+      }
+    }
+
+    // 4. Inisialisasi & Muat Data Profil Sesi Aktif
+    async function loadDataProfil() {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      const { data: profil, error } = await db
+        .from('profil_pengguna')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error || !profil) {
+        alert('Gagal mengambil data profil.');
+        window.location.href = './index.html';
+        return;
+      }
+
+      currentUser = profil;
+
+      // Render Header Identitas
+      document.getElementById('topNamaLengkap').textContent = profil.nama_lengkap;
+      document.getElementById('topEmail').textContent = session.user.email;
+      document.getElementById('badgePeran').textContent = profil.peran_utama;
+
+      // Render Nilai Form
+      document.getElementById('inputNama').value = profil.nama_lengkap;
+      document.getElementById('inputNomorInduk').value = profil.nomor_induk || '-';
+
+      // Kondisi Kolom Tambahan Siswa vs Guru
+      if (profil.peran_utama === 'siswa') {
+        document.getElementById('boxFieldRombel').classList.remove('hidden');
+        document.getElementById('inputKelas').value = profil.kelas ? `Kelas ${profil.kelas}` : 'Belum Ditentukan';
+      } else if (profil.peran_utama === 'guru') {
+        document.getElementById('boxFieldTugas').classList.remove('hidden');
+        const tugas = Array.isArray(profil.tugas_tambahan) && profil.tugas_tambahan.length 
+          ? profil.tugas_tambahan.join(', ').replace(/_/g, ' ') 
+          : 'Guru Mata Pelajaran Reguler';
+        document.getElementById('inputTugas').value = tugas;
+      }
+    }
+
+    // 5. Submit Perubahan Nama Lengkap
+    document.getElementById('formBiodata').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSimpanBiodata');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base"></i> Menyimpan...`;
+
+      const namaBaru = document.getElementById('inputNama').value.trim();
+
+      try {
+        const { error } = await db
+          .from('profil_pengguna')
+          .update({ nama_lengkap: namaBaru })
+          .eq('id', currentUser.id);
+
+        if (error) throw error;
+
+        // Perbarui metadata auth pengguna
+        await db.auth.updateUser({
+          data: { full_name: namaBaru, nama_lengkap: namaBaru }
+        });
+
+        currentUser.nama_lengkap = namaBaru;
+        document.getElementById('topNamaLengkap').textContent = namaBaru;
+        localStorage.setItem('kbm_user_profile', JSON.stringify(currentUser));
+
+        notify('Nama lengkap berhasil diperbarui!');
+      } catch (err) {
+        notify('Gagal menyimpan profil: ' + err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph ph-check-circle text-base"></i> Simpan Nama Lengkap`;
+      }
+    });
+
+    // 6. Submit Perubahan Kata Sandi Mandiri (Supabase Auth Client-side)
+    document.getElementById('formGantiPassword').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pass1 = document.getElementById('passBaru').value;
+      const pass2 = document.getElementById('konfirmPassBaru').value;
+
+      if (pass1.length < 6) {
+        notify('Kata sandi baru minimal 6 karakter.', false);
+        return;
+      }
+
+      if (pass1 !== pass2) {
+        notify('Konfirmasi kata sandi tidak cocok.', false);
+        return;
+      }
+
+      const btn = document.getElementById('btnSimpanPassword');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base"></i> Memperbarui sandi...`;
+
+      try {
+        const { error } = await db.auth.updateUser({
+          password: pass1
+        });
+
+        if (error) throw error;
+
+        notify('Kata sandi berhasil diperbarui! Gunakan sandi baru saat login berikutnya.');
+        document.getElementById('formGantiPassword').reset();
+      } catch (err) {
+        notify('Gagal mengganti kata sandi: ' + err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph ph-lock-key text-base"></i> Perbarui Kata Sandi`;
+      }
+    });
+
+    // Jalankan inisialisasi awal
+    loadDataProfil();
+  </script>
+</body>
+</html>
