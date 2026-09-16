@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jurnal Mengajar Guru | SMAN 1 Cidahu</title>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png">
+
+  <!-- Tailwind CSS CDN & Phosphor Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+
+  <!-- TOPBAR GURU (SMANIDA SLATE) -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl shadow-xs">
+          <img src="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png" alt="Logo SMAN 1 Cidahu" class="w-7 h-7 object-contain">
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold text-slate-900 leading-none">PORTAL JURNAL MENGAJAR GURU</h1>
+          <span class="text-[11px] text-slate-400 font-medium">SMAN 1 Cidahu Kuningan</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="hidden md:flex flex-col text-right">
+          <span id="userName" class="text-xs font-bold text-slate-800">Memuat profil...</span>
+          <span id="userNip" class="text-[10px] text-slate-400 font-mono">-</span>
+        </div>
+        <div id="btnAdminLinkWadah" class="hidden">
+          <a href="./admin.html" class="flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition border border-slate-200/60">
+            <i class="ph ph-shield-check text-base"></i>
+            <span class="hidden sm:inline">Panel Admin</span>
+          </a>
+        </div>
+        <button id="logoutBtn" class="flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-white px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 transition">
+          <i class="ph ph-sign-out text-base"></i>
+          <span class="hidden sm:inline">Keluar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KONTEN UTAMA -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6">
+
+    <!-- BANNER RINGKASAN GURU -->
+    <div class="bg-slate-900 text-white rounded-3xl p-6 shadow-md border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-semibold mb-2 border border-slate-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          Agenda Pembelajaran Harian
+        </div>
+        <h2 id="greetingTitle" class="text-xl font-black tracking-tight">Selamat Datang, Bapak/Ibu Guru</h2>
+        <p class="text-xs text-slate-400 mt-1">Pilih rombel mengajar untuk memunculkan daftar presensi siswa dan mencatat materi KBM.</p>
+      </div>
+      <div class="flex items-center gap-3 text-center w-full sm:w-auto justify-between sm:justify-start">
+        <div class="bg-slate-800/80 rounded-2xl px-4 py-2.5 border border-slate-700/80 min-w-[85px]">
+          <p class="text-[10px] uppercase font-bold text-slate-400">Total Jurnal</p>
+          <p id="cntJurnal" class="text-lg font-black text-amber-400">0</p>
+        </div>
+        <div class="bg-slate-800/80 rounded-2xl px-4 py-2.5 border border-slate-700/80 min-w-[85px]">
+          <p class="text-[10px] uppercase font-bold text-slate-400">Rombel Ajar</p>
+          <p id="cntPenugasan" class="text-lg font-black text-emerald-400">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFIKASI TOAST -->
+    <div id="toastBox" class="hidden p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-md transition-all">
+      <span id="toastMsg">Notifikasi</span>
+      <button onclick="document.getElementById('toastBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+
+    <!-- GRID FORM INPUT JURNAL & RIWAYAT -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- FORM INPUT JURNAL HARIAN BESERTA ABSENSI SISWA -->
+      <section class="lg:col-span-5 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+          <span class="w-2 h-5 bg-slate-900 rounded-full"></span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Input Jurnal & Presensi Siswa</h3>
+            <p class="text-[11px] text-slate-400">Pilih kelas di bawah untuk memunculkan daftar siswa</p>
+          </div>
+        </div>
+
+        <form id="formJurnal" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal KBM</label>
+              <input type="date" id="tglKbm" required class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Jam Pelajaran Ke-</label>
+              <input type="text" id="jamKe" placeholder="Contoh: 1-2 atau 3-4" required class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Mata Pelajaran & Kelas yang Diajar</label>
+            <select id="selectPenugasan" onchange="tanganiGantiKelas()" required class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition font-medium">
+              <option value="">Memuat data penugasan Anda...</option>
+            </select>
+          </div>
+
+          <!-- DAFTAR SISWA KELAS (2x Lebih Panjang Kebawah: max-h-[480px]) -->
+          <div id="boxPresensiSiswa" class="hidden p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-200/60 pb-2">
+              <div>
+                <h4 class="text-xs font-extrabold text-slate-800">Daftar Kehadiran Siswa</h4>
+                <p id="labelJumlahSiswaKelas" class="text-[10px] text-slate-500">Memuat siswa...</p>
+              </div>
+              <button type="button" onclick="setSemuaSiswaHadir()" class="text-[11px] font-bold text-slate-700 hover:text-slate-900 px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs transition">
+                Set Semua Hadir
+              </button>
+            </div>
+
+            <!-- Wadah Baris Siswa (2x lebih tinggi) -->
+            <div id="wadahListSiswaAbsen" class="space-y-2 max-h-[480px] overflow-y-auto pr-1 text-xs">
+              <p class="text-slate-400 text-center py-4">Pilih kelas di atas terlebih dahulu.</p>
+            </div>
+
+            <!-- Ringkasan Hadir / Absen Otomatis -->
+            <div class="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs font-bold">
+              <span class="text-emerald-700 flex items-center gap-1">
+                <i class="ph ph-check-circle"></i> Hadir: <span id="txtRingkasHadir">0</span>
+              </span>
+              <span class="text-rose-600 flex items-center gap-1">
+                <i class="ph ph-x-circle"></i> Tidak Hadir (S/I/A): <span id="txtRingkasAbsen">0</span>
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Materi Pokok / KD / Capaian Pembelajaran</label>
+            <input type="text" id="materi" placeholder="Contoh: Persamaan Linear Dua Variabel" required class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Catatan Tambahan / Keterangan KBM</label>
+            <textarea id="catatan" rows="3" placeholder="Catatan proses kegiatan belajar mengajar atau catatan khusus lainnya..." class="w-full text-xs p-3 border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition leading-relaxed"></textarea>
+          </div>
+
+          <button type="submit" id="btnSimpanJurnal" class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-xs transition shadow-md flex items-center justify-center gap-2 active:scale-[0.99]">
+            <i class="ph ph-check-circle text-base"></i> Simpan Jurnal & Presensi
+          </button>
+        </form>
+      </section>
+
+      <!-- RIWAYAT LOG JURNAL (10 Data per Halaman, Bebas Scroll, Warna Berbeda per Kartu) -->
+      <section class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Riwayat Jurnal Mengajar Anda</h3>
+            <p class="text-xs text-slate-400">10 data terbaru per halaman dengan latar warna berbeda per kartu</p>
+          </div>
+          <button onclick="loadRiwayatJurnal()" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 transition self-start sm:self-auto">
+            <i class="ph ph-arrow-clockwise"></i> Segarkan
+          </button>
+        </div>
+
+        <!-- Toolbar Pencarian & Filter Kelas -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+          <div class="sm:col-span-7 relative">
+            <i class="ph ph-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+            <input type="text" id="searchJurnalInput" oninput="filterRiwayatJurnal()" placeholder="Cari materi, catatan, atau siswa tidak hadir..." class="w-full pl-10 pr-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+          </div>
+          <div class="sm:col-span-5">
+            <select id="filterKelasRiwayat" onchange="filterRiwayatJurnal()" class="w-full py-2.5 px-3 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 font-semibold text-slate-700 transition">
+              <option value="semua">Semua Rombel / Kelas</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Wadah Kartu Riwayat Jurnal (Tampil Utuh 10 Data Tanpa Scroll Container) -->
+        <div id="wadahRiwayatCards" class="space-y-4">
+          <div class="py-12 text-center text-slate-400 text-xs">
+            <i class="ph ph-spinner animate-spin text-lg block mb-1"></i> Memuat riwayat...
+          </div>
+        </div>
+
+        <!-- Footer Paginasi Riwayat (10 Data per Halaman) -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs text-slate-500">
+          <p id="infoRiwayatCount">Menampilkan 0 jurnal</p>
+          <div class="flex items-center gap-1">
+            <button id="btnPrevPageRiwayat" onclick="gantiHalamanRiwayat(-1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-40" disabled>Sebelumnya</button>
+            <span id="labelHalamanRiwayat" class="px-2 font-bold text-slate-700">1</span>
+            <button id="btnNextPageRiwayat" onclick="gantiHalamanRiwayat(1)" class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-100 disabled:opacity-40">Berikutnya</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <script src="./js/config.js"></script>
+  <script>
+    let currentUser = null;
+    let listPenugasanGuru = [];
+    let listJurnalGlobal = [];
+    let listJurnalFiltered = [];
+    let listSiswaKelasAktif = [];
+
+    // Paginasi 10 Data per Halaman
+    let riwayatCurrentPage = 1;
+    const riwayatPageSize = 10;
+
+    // Palet warna latar kartu riwayat agar guru sepuh mudah membedakan tiap baris
+    const cardThemePalette = [
+      { bg: 'bg-white', border: 'border-slate-300/80', badgeKelas: 'bg-slate-900 text-white', accentText: 'text-slate-800' },
+      { bg: 'bg-blue-50/70', border: 'border-blue-200', badgeKelas: 'bg-blue-800 text-white', accentText: 'text-blue-900' },
+      { bg: 'bg-amber-50/70', border: 'border-amber-200', badgeKelas: 'bg-amber-800 text-white', accentText: 'text-amber-950' },
+      { bg: 'bg-emerald-50/70', border: 'border-emerald-200', badgeKelas: 'bg-emerald-800 text-white', accentText: 'text-emerald-950' },
+      { bg: 'bg-indigo-50/70', border: 'border-indigo-200', badgeKelas: 'bg-indigo-800 text-white', accentText: 'text-indigo-950' }
+    ];
+
+    // 1. Validasi Hak Akses Guru
+    async function cekAksesGuru() {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      const { data: profil, error } = await db
+        .from('profil_pengguna')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error || !profil) {
+        alert('Gagal memverifikasi profil pengguna.');
+        await db.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      currentUser = profil;
+      document.getElementById('userName').textContent = profil.nama_lengkap;
+      document.getElementById('userNip').textContent = profil.nomor_induk ? `NIP: ${profil.nomor_induk}` : '-';
+      document.getElementById('greetingTitle').textContent = `Selamat Datang, ${profil.nama_lengkap}`;
+
+      if (profil.peran_utama === 'admin') {
+        document.getElementById('btnAdminLinkWadah').classList.remove('hidden');
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('tglKbm').value = today;
+
+      await loadPenugasanSaya();
+      await loadRiwayatJurnal();
+    }
+
+    // 2. Tombol Keluar
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await db.auth.signOut();
+      localStorage.removeItem('kbm_user_profile');
+      window.location.href = './index.html';
+    });
+
+    // 3. Notifikasi Toast
+    function notify(pesan, sukses = true) {
+      const t = document.getElementById('toastBox');
+      const m = document.getElementById('toastMsg');
+      m.textContent = pesan;
+      t.className = sukses 
+        ? "p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm bg-emerald-50 text-emerald-800 border border-emerald-200"
+        : "p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-sm bg-rose-50 text-rose-800 border border-rose-200";
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 4000);
+    }
+
+    // 4. Muat Penugasan Guru & Dropdown Filter
+    async function loadPenugasanSaya() {
+      const selectEl = document.getElementById('selectPenugasan');
+      const filterKelasEl = document.getElementById('filterKelasRiwayat');
+      
+      const { data, error } = await db
+        .from('penugasan_guru_mapel')
+        .select(`
+          id,
+          mapel_id,
+          kelas_id,
+          master_mapel (id, nama_mapel, kode_mapel),
+          master_kelas (id, nama_kelas)
+        `)
+        .eq('guru_id', currentUser.id);
+
+      if (error) {
+        selectEl.innerHTML = `<option value="">Gagal memuat penugasan: ${error.message}</option>`;
+        return;
+      }
+
+      listPenugasanGuru = data || [];
+      document.getElementById('cntPenugasan').textContent = listPenugasanGuru.length;
+
+      if (!listPenugasanGuru.length) {
+        selectEl.innerHTML = `<option value="">Belum ada penugasan mengajar dari Kurikulum</option>`;
+        return;
+      }
+
+      selectEl.innerHTML = `<option value="">-- Pilih Mapel & Rombel Kelas --</option>` + 
+        listPenugasanGuru.map(p => `
+          <option value="${p.id}" data-mapel="${p.master_mapel?.nama_mapel}" data-kelas="${p.master_kelas?.nama_kelas}">
+            ${p.master_mapel?.nama_mapel} (${p.master_mapel?.kode_mapel}) - Kelas ${p.master_kelas?.nama_kelas}
+          </option>
+        `).join('');
+
+      const uniqueKelas = [...new Set(listPenugasanGuru.map(p => p.master_kelas?.nama_kelas).filter(Boolean))];
+      filterKelasEl.innerHTML = `<option value="semua">Semua Rombel / Kelas</option>` + 
+        uniqueKelas.map(k => `<option value="${k}">Kelas ${k}</option>`).join('');
+    }
+
+    // 5. Ketika Kelas Dipilih: Ambil Daftar Siswa (Wadah 2x Lebih Panjang)
+    async function tanganiGantiKelas() {
+      const selectEl = document.getElementById('selectPenugasan');
+      const boxPresensi = document.getElementById('boxPresensiSiswa');
+      const wadahList = document.getElementById('wadahListSiswaAbsen');
+
+      if (!selectEl.value) {
+        boxPresensi.classList.add('hidden');
+        listSiswaKelasAktif = [];
+        return;
+      }
+
+      const selectedOpt = selectEl.options[selectEl.selectedIndex];
+      const namaKelas = selectedOpt.getAttribute('data-kelas');
+
+      boxPresensi.classList.remove('hidden');
+      wadahList.innerHTML = `<p class="text-slate-400 text-center py-4"><i class="ph ph-spinner animate-spin"></i> Mengambil data siswa kelas ${namaKelas}...</p>`;
+
+      const { data: siswaData, error } = await db
+        .from('profil_pengguna')
+        .select('id, nama_lengkap, nomor_induk')
+        .eq('peran_utama', 'siswa')
+        .eq('kelas', namaKelas)
+        .order('nama_lengkap', { ascending: true });
+
+      if (error) {
+        wadahList.innerHTML = `<p class="text-rose-500 text-center py-4">Gagal memuat siswa: ${error.message}</p>`;
+        return;
+      }
+
+      listSiswaKelasAktif = siswaData || [];
+      document.getElementById('labelJumlahSiswaKelas').textContent = `${listSiswaKelasAktif.length} siswa terdaftar di Kelas ${namaKelas}`;
+
+      if (!listSiswaKelasAktif.length) {
+        wadahList.innerHTML = `<p class="text-amber-600 text-center py-4">Belum ada akun siswa di rombel ${namaKelas}.</p>`;
+        hitungRingkasanAbsen();
+        return;
+      }
+
+      wadahList.innerHTML = listSiswaKelasAktif.map((s, idx) => `
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-white border border-slate-200/80 hover:border-slate-300 transition">
+          <div class="min-w-0 pr-2">
+            <span class="font-bold text-slate-800 block truncate">${idx + 1}. ${s.nama_lengkap}</span>
+            <span class="text-[10px] text-slate-400 font-mono">${s.nomor_induk || 'NISN -'}</span>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0 text-[11px] font-bold">
+            <label class="cursor-pointer px-2 py-1 rounded-lg border border-slate-200 has-[:checked]:bg-emerald-600 has-[:checked]:text-white has-[:checked]:border-emerald-600 transition">
+              <input type="radio" name="status_absen_${s.id}" value="Hadir" checked onchange="hitungRingkasanAbsen()" class="hidden"> H
+            </label>
+            <label class="cursor-pointer px-2 py-1 rounded-lg border border-slate-200 has-[:checked]:bg-amber-500 has-[:checked]:text-white has-[:checked]:border-amber-500 transition">
+              <input type="radio" name="status_absen_${s.id}" value="Sakit" onchange="hitungRingkasanAbsen()" class="hidden"> S
+            </label>
+            <label class="cursor-pointer px-2 py-1 rounded-lg border border-slate-200 has-[:checked]:bg-sky-600 has-[:checked]:text-white has-[:checked]:border-sky-600 transition">
+              <input type="radio" name="status_absen_${s.id}" value="Izin" onchange="hitungRingkasanAbsen()" class="hidden"> I
+            </label>
+            <label class="cursor-pointer px-2 py-1 rounded-lg border border-slate-200 has-[:checked]:bg-rose-600 has-[:checked]:text-white has-[:checked]:border-rose-600 transition">
+              <input type="radio" name="status_absen_${s.id}" value="Alpa" onchange="hitungRingkasanAbsen()" class="hidden"> A
+            </label>
+          </div>
+        </div>
+      `).join('');
+
+      hitungRingkasanAbsen();
+    }
+
+    function hitungRingkasanAbsen() {
+      let hadir = 0;
+      let absen = 0;
+
+      listSiswaKelasAktif.forEach(s => {
+        const checked = document.querySelector(`input[name="status_absen_${s.id}"]:checked`);
+        if (checked) {
+          if (checked.value === 'Hadir') {
+            hadir++;
+          } else {
+            absen++;
+          }
+        }
+      });
+
+      document.getElementById('txtRingkasHadir').textContent = hadir;
+      document.getElementById('txtRingkasAbsen').textContent = absen;
+    }
+
+    function setSemuaSiswaHadir() {
+      listSiswaKelasAktif.forEach(s => {
+        const radHadir = document.querySelector(`input[name="status_absen_${s.id}"][value="Hadir"]`);
+        if (radHadir) radHadir.checked = true;
+      });
+      hitungRingkasanAbsen();
+    }
+
+    // 6. Simpan Jurnal Mengajar & Absensi
+    document.getElementById('formJurnal').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnSimpanJurnal');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ph ph-spinner animate-spin text-base"></i> Menyimpan jurnal & absensi...`;
+
+      const penugasanSelect = document.getElementById('selectPenugasan');
+      const selectedOption = penugasanSelect.options[penugasanSelect.selectedIndex];
+      
+      const namaMapel = selectedOption.getAttribute('data-mapel');
+      const namaKelas = selectedOption.getAttribute('data-kelas');
+
+      const jmlHadir = parseInt(document.getElementById('txtRingkasHadir').textContent) || 0;
+      const jmlAbsen = parseInt(document.getElementById('txtRingkasAbsen').textContent) || 0;
+
+      const payloadJurnal = {
+        guru_id: currentUser.id,
+        nama_guru: currentUser.nama_lengkap,
+        mata_pelajaran: namaMapel,
+        kelas: namaKelas,
+        tanggal: document.getElementById('tglKbm').value,
+        jam_ke: document.getElementById('jamKe').value.trim(),
+        materi_pokok: document.getElementById('materi').value.trim(),
+        jumlah_hadir: jmlHadir,
+        jumlah_tidak_hadir: jmlAbsen,
+        keterangan_absen: document.getElementById('catatan').value.trim() || null
+      };
+
+      try {
+        const { data: jurnalBaru, error: errJurnal } = await db
+          .from('jurnal_mengajar')
+          .insert([payloadJurnal])
+          .select('id')
+          .single();
+
+        if (errJurnal) throw errJurnal;
+
+        if (listSiswaKelasAktif.length > 0 && jurnalBaru) {
+          const payloadAbsensiSiswa = listSiswaKelasAktif.map(s => {
+            const rad = document.querySelector(`input[name="status_absen_${s.id}"]:checked`);
+            return {
+              jurnal_id: jurnalBaru.id,
+              siswa_id: s.id,
+              status: rad ? rad.value : 'Hadir'
+            };
+          });
+
+          const { error: errAbsensi } = await db
+            .from('absensi_kbm_siswa')
+            .insert(payloadAbsensiSiswa);
+
+          if (errAbsensi) console.warn("Peringatan absensi_kbm_siswa:", errAbsensi);
+        }
+
+        notify('Jurnal mengajar dan data absensi berhasil disimpan!');
+        
+        document.getElementById('jamKe').value = '';
+        document.getElementById('materi').value = '';
+        document.getElementById('catatan').value = '';
+        document.getElementById('boxPresensiSiswa').classList.add('hidden');
+        document.getElementById('selectPenugasan').value = '';
+        listSiswaKelasAktif = [];
+
+        await loadRiwayatJurnal();
+
+      } catch (err) {
+        notify('Gagal menyimpan jurnal: ' + err.message, false);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ph ph-check-circle text-base"></i> Simpan Jurnal & Presensi`;
+      }
+    });
+
+    // 7. Muat Riwayat dengan Detail Siswa Tidak Hadir
+    async function loadRiwayatJurnal() {
+      const wadah = document.getElementById('wadahRiwayatCards');
+      wadah.innerHTML = `<div class="py-12 text-center text-slate-400 text-xs"><i class="ph ph-spinner animate-spin text-lg block mb-1"></i> Memuat data riwayat lengkap...</div>`;
+
+      const { data: dataJurnal, error } = await db
+        .from('jurnal_mengajar')
+        .select('*')
+        .eq('guru_id', currentUser.id)
+        .order('tanggal', { ascending: false })
+        .order('id', { ascending: false });
+
+      if (error) {
+        wadah.innerHTML = `<div class="py-8 text-center text-rose-500 text-xs">Gagal memuat: ${error.message}</div>`;
+        return;
+      }
+
+      if (!dataJurnal || !dataJurnal.length) {
+        listJurnalGlobal = [];
+        listJurnalFiltered = [];
+        document.getElementById('cntJurnal').textContent = '0';
+        renderRiwayatUI();
+        return;
+      }
+
+      // Ambil absensi siswa yang TIDAK HADIR (Sakit, Izin, Alpa)
+      const jurnalIds = dataJurnal.map(j => j.id);
+      const { data: dataAbsensi } = await db
+        .from('absensi_kbm_siswa')
+        .select(`
+          jurnal_id,
+          status,
+          profil_pengguna (nama_lengkap)
+        `)
+        .in('jurnal_id', jurnalIds)
+        .neq('status', 'Hadir');
+
+      const mapAbsensi = {};
+      if (dataAbsensi) {
+        dataAbsensi.forEach(a => {
+          if (!mapAbsensi[a.jurnal_id]) mapAbsensi[a.jurnal_id] = [];
+          mapAbsensi[a.jurnal_id].push({
+            nama: a.profil_pengguna?.nama_lengkap || 'Siswa',
+            status: a.status
+          });
+        });
+      }
+
+      listJurnalGlobal = dataJurnal.map(j => ({
+        ...j,
+        siswa_tidak_hadir: mapAbsensi[j.id] || []
+      }));
+
+      document.getElementById('cntJurnal').textContent = listJurnalGlobal.length;
+      filterRiwayatJurnal();
+    }
+
+    // 8. Filter Pencarian & Dropdown Kelas
+    function filterRiwayatJurnal() {
+      const kw = (document.getElementById('searchJurnalInput')?.value || '').toLowerCase().trim();
+      const filterKelas = document.getElementById('filterKelasRiwayat')?.value || 'semua';
+
+      listJurnalFiltered = listJurnalGlobal.filter(j => {
+        const matchKelas = filterKelas === 'semua' || (j.kelas === filterKelas);
+        const namaSiswaAbsenStr = j.siswa_tidak_hadir.map(s => s.nama).join(' ').toLowerCase();
+
+        const matchKw = (j.materi_pokok || '').toLowerCase().includes(kw) ||
+                        (j.mata_pelajaran || '').toLowerCase().includes(kw) ||
+                        (j.kelas || '').toLowerCase().includes(kw) ||
+                        (j.keterangan_absen || '').toLowerCase().includes(kw) ||
+                        namaSiswaAbsenStr.includes(kw);
+
+        return matchKelas && matchKw;
+      });
+
+      riwayatCurrentPage = 1;
+      renderRiwayatUI();
+    }
+
+    // 9. Render 10 Kartu Riwayat Utuh Tanpa Scroll dengan Background Berbeda
+    function renderRiwayatUI() {
+      const wadah = document.getElementById('wadahRiwayatCards');
+      const total = listJurnalFiltered.length;
+
+      if (!total) {
+        wadah.innerHTML = `
+          <div class="py-12 text-center text-slate-400 bg-slate-50/60 rounded-2xl border border-slate-200/60">
+            <i class="ph ph-notepad text-2xl text-slate-300 block mb-1"></i>
+            <p class="text-xs font-semibold">Tidak ada riwayat jurnal yang sesuai filter.</p>
+          </div>
+        `;
+        document.getElementById('infoRiwayatCount').textContent = 'Menampilkan 0 jurnal';
+        document.getElementById('btnPrevPageRiwayat').disabled = true;
+        document.getElementById('btnNextPageRiwayat').disabled = true;
+        return;
+      }
+
+      const totalPage = Math.ceil(total / riwayatPageSize) || 1;
+      if (riwayatCurrentPage > totalPage) riwayatCurrentPage = totalPage;
+
+      const startIndex = (riwayatCurrentPage - 1) * riwayatPageSize;
+      const paginated = listJurnalFiltered.slice(startIndex, startIndex + riwayatPageSize);
+
+      wadah.innerHTML = paginated.map((j, index) => {
+        const tglFmt = new Date(j.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        
+        // Pilih skema warna kartu bergantian secara dinamis (index % 5)
+        const theme = cardThemePalette[(startIndex + index) % cardThemePalette.length];
+
+        // Badges nama siswa tidak hadir
+        let absenHtml = '';
+        if (j.siswa_tidak_hadir && j.siswa_tidak_hadir.length > 0) {
+          absenHtml = `
+            <div class="mt-2.5 pt-2 border-t border-slate-200/80">
+              <span class="text-[11px] font-bold text-slate-700 block mb-1">Daftar Siswa Tidak Hadir:</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${j.siswa_tidak_hadir.map(s => {
+                  let badgeColor = 'bg-rose-100 text-rose-800 border-rose-300';
+                  if (s.status === 'Sakit') badgeColor = 'bg-amber-100 text-amber-900 border-amber-300';
+                  if (s.status === 'Izin') badgeColor = 'bg-sky-100 text-sky-900 border-sky-300';
+                  return `
+                    <span class="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border ${badgeColor}">
+                      ${s.nama} (${s.status})
+                    </span>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          `;
+        } else if (j.jumlah_tidak_hadir > 0) {
+          absenHtml = `
+            <div class="mt-2.5 pt-2 border-t border-slate-200/80 text-[11px] text-slate-600 font-medium italic">
+              ${j.jumlah_tidak_hadir} siswa tidak hadir (rincian nama belum tercatat).
+            </div>
+          `;
+        }
+
+        return `
+          <div class="p-4.5 sm:p-5 rounded-2xl ${theme.bg} border-2 ${theme.border} shadow-sm transition hover:shadow-md space-y-2.5">
+            <!-- Header: Tanggal, Kelas, Mapel & Tombol Hapus -->
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="${theme.badgeKelas} font-black px-3 py-1 rounded-lg text-xs shadow-2xs">
+                    Kelas ${j.kelas || '-'}
+                  </span>
+                  <span class="bg-white text-slate-700 font-bold px-2.5 py-1 rounded-lg text-xs border border-slate-300">
+                    Jam Ke: ${j.jam_ke}
+                  </span>
+                  <span class="text-xs sm:text-sm font-black ${theme.accentText}">${j.mata_pelajaran || '-'}</span>
+                </div>
+                <p class="text-[11px] text-slate-500 font-semibold mt-1.5 flex items-center gap-1">
+                  <i class="ph ph-calendar"></i> ${tglFmt}
+                </p>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 font-black text-xs border border-emerald-300">
+                  <i class="ph ph-check-circle text-sm"></i> ${j.jumlah_hadir || 0} Hadir
+                </span>
+                ${(j.jumlah_tidak_hadir > 0) ? `
+                  <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-100 text-rose-800 font-black text-xs border border-rose-300">
+                    <i class="ph ph-x-circle text-sm"></i> ${j.jumlah_tidak_hadir} Absen
+                  </span>
+                ` : ''}
+                <button onclick="hapusJurnal(${j.id})" title="Hapus Jurnal" class="p-1.5 rounded-lg text-rose-600 hover:bg-rose-100/80 transition ml-1">
+                  <i class="ph ph-trash text-lg"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Uraian Lengkap Materi Pokok -->
+            <div class="bg-white/90 p-3 rounded-xl border border-slate-200/80 space-y-1">
+              <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block">Materi / KD Pembelajaran:</span>
+              <p class="text-xs sm:text-sm font-bold text-slate-900 leading-relaxed whitespace-pre-wrap">${j.materi_pokok}</p>
+            </div>
+
+            <!-- Catatan KBM Tambahan Jika Ada -->
+            ${j.keterangan_absen ? `
+              <div class="text-xs text-slate-700 bg-amber-50/80 p-2.5 rounded-xl border border-amber-200 leading-relaxed">
+                <span class="font-extrabold text-amber-900">Catatan KBM:</span> ${j.keterangan_absen}
+              </div>
+            ` : ''}
+
+            <!-- Daftar Nama Siswa Tidak Hadir -->
+            ${absenHtml}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('infoRiwayatCount').textContent = `Menampilkan ${startIndex + 1} - ${Math.min(startIndex + riwayatPageSize, total)} dari ${total} jurnal`;
+      document.getElementById('labelHalamanRiwayat').textContent = `${riwayatCurrentPage} / ${totalPage}`;
+      document.getElementById('btnPrevPageRiwayat').disabled = (riwayatCurrentPage <= 1);
+      document.getElementById('btnNextPageRiwayat').disabled = (riwayatCurrentPage >= totalPage);
+    }
+
+    // 10. Navigasi Paginasi Riwayat
+    function gantiHalamanRiwayat(arah) {
+      riwayatCurrentPage += arah;
+      renderRiwayatUI();
+    }
+
+    // 11. Hapus Jurnal Mengajar
+    async function hapusJurnal(id) {
+      if (confirm('Hapus catatan jurnal mengajar ini beserta riwayat absensinya?')) {
+        const { error } = await db.from('jurnal_mengajar').delete().eq('id', id);
+        if (!error) {
+          notify('Jurnal berhasil dihapus.');
+          await loadRiwayatJurnal();
+        } else {
+          notify('Gagal menghapus: ' + error.message, false);
+        }
+      }
+    }
+
+    // Inisialisasi awal
+    cekAksesGuru();
+  </script>
+</body>
+</html>

@@ -1,1 +1,236 @@
-Halooooo
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Portal KBM | SMAN 1 Cidahu</title>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png">
+  
+  <!-- CDN Dependencies -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex items-center justify-center p-4 antialiased font-sans">
+
+  <div class="max-w-md w-full">
+    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-8 sm:p-10 border border-slate-200/80">
+      
+      <!-- Brand & Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex p-3 rounded-2xl bg-slate-50 border border-slate-200/80 mb-4">
+          <img 
+            src="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png" 
+            alt="Logo SMAN 1 Cidahu" 
+            class="w-12 h-12 object-contain"
+          >
+        </div>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">BiSMA KBM</h1>
+        <p class="text-xs text-slate-500 mt-1">SMAN 1 Cidahu Kuningan</p>
+      </div>
+
+      <!-- Alert Notifikasi -->
+      <div id="alertBox" class="hidden mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-3">
+        <i class="ph ph-warning-circle text-lg shrink-0"></i>
+        <span id="alertMsg">Terjadi kesalahan</span>
+      </div>
+
+      <!-- Form Login -->
+      <form id="loginForm" class="space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-2">Email Akun</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <i class="ph ph-envelope-simple text-lg"></i>
+            </span>
+            <input 
+              type="email" 
+              id="email" 
+              required 
+              autocomplete="email"
+              placeholder="nama@sman1cidahu.sch.id" 
+              class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:bg-white focus:border-slate-900 transition"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-2">Kata Sandi</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <i class="ph ph-lock-key text-lg"></i>
+            </span>
+            <input 
+              type="password" 
+              id="password" 
+              required 
+              autocomplete="current-password"
+              placeholder="••••••••" 
+              class="w-full pl-11 pr-11 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm outline-none focus:bg-white focus:border-slate-900 transition"
+            >
+            <button 
+              type="button" 
+              onclick="togglePassword()" 
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-700"
+              tabindex="-1"
+            >
+              <i id="toggleIcon" class="ph ph-eye text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <button 
+          type="submit" 
+          id="btnSubmit" 
+          class="w-full mt-2 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 px-4 rounded-2xl transition flex items-center justify-center gap-2 text-sm shadow-md active:scale-[0.99]"
+        >
+          <span>Masuk</span>
+          <i class="ph ph-arrow-right font-bold text-sm"></i>
+        </button>
+      </form>
+
+      <!-- Footer Info -->
+      <div class="mt-8 pt-6 border-t border-slate-100 text-center">
+        <a href="https://sman1cidahu.sch.id" class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-900 transition">
+          <i class="ph ph-arrow-left"></i> Kembali ke Website Utama
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="./js/config.js"></script>
+  <script>
+    function arahkanRole(peran) {
+      if (peran === 'admin') {
+        window.location.href = './admin.html';
+      } else if (peran === 'guru') {
+        window.location.href = './guru.html';
+      } else if (peran === 'siswa') {
+        window.location.href = './siswa.html';
+      } else {
+        window.location.href = './guru.html';
+      }
+    }
+
+    async function checkSession() {
+      // Pastikan objek koneksi database Supabase tersedia
+      if (typeof db === 'undefined' || !db.auth) {
+        console.warn("Koneksi 'db' dari config.js belum terdeteksi.");
+        return;
+      }
+
+      try {
+        const { data: { session }, error } = await db.auth.getSession();
+        if (error || !session) return;
+
+        const cachedProfile = localStorage.getItem('kbm_user_profile');
+        if (cachedProfile) {
+          try {
+            const profil = JSON.parse(cachedProfile);
+            arahkanRole(profil.peran_utama);
+            return;
+          } catch(e) {}
+        }
+
+        const { data: profil } = await db
+          .from('profil_pengguna')
+          .select('peran_utama')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (profil) {
+          arahkanRole(profil.peran_utama);
+        }
+      } catch (err) {
+        console.warn("Sesi belum aktif atau jaringan offline:", err);
+      }
+    }
+
+    // Jalankan pemeriksaan sesi saat halaman siap
+    document.addEventListener('DOMContentLoaded', checkSession);
+
+    function togglePassword() {
+      const pass = document.getElementById('password');
+      const icon = document.getElementById('toggleIcon');
+      if (pass.type === 'password') {
+        pass.type = 'text';
+        icon.className = 'ph ph-eye-slash text-lg';
+      } else {
+        pass.type = 'password';
+        icon.className = 'ph ph-eye text-lg';
+      }
+    }
+
+    const form = document.getElementById('loginForm');
+    const alertBox = document.getElementById('alertBox');
+    const alertMsg = document.getElementById('alertMsg');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      alertBox.classList.add('hidden');
+
+      if (typeof db === 'undefined' || !db.auth) {
+        alertMsg.textContent = 'Gagal terhubung ke database. Pastikan file js/config.js ada dan konfigurasi Supabase benar.';
+        alertBox.classList.remove('hidden');
+        return;
+      }
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = `<i class="ph ph-spinner animate-spin text-base"></i> Memverifikasi...`;
+
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const { data, error } = await db.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+
+        const { data: profil, error: errProfil } = await db
+          .from('profil_pengguna')
+          .select('*')
+          .eq('id', data.user.id)
+          .maybeSingle();
+
+        if (errProfil) throw errProfil;
+        if (!profil) {
+          await db.auth.signOut();
+          throw new Error('Profil pengguna belum disiapkan oleh admin.');
+        }
+
+        localStorage.setItem('kbm_user_profile', JSON.stringify(profil));
+        arahkanRole(profil.peran_utama);
+
+      } catch (err) {
+        if (err.message && err.message.includes('Failed to fetch')) {
+          alertMsg.textContent = 'Gagal menghubungi server Supabase. Periksa koneksi internet atau pastikan URL project Supabase di js/config.js aktif.';
+        } else if (err.message === 'Invalid login credentials') {
+          alertMsg.textContent = 'Email atau kata sandi tidak cocok.';
+        } else {
+          alertMsg.textContent = err.message || 'Terjadi kesalahan saat masuk.';
+        }
+        alertBox.classList.remove('hidden');
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<span>Masuk</span><i class="ph ph-arrow-right font-bold text-sm"></i>`;
+      }
+    });
+  </script>
+</body>
+</html>

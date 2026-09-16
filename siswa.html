@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Siswa | SMAN 1 Cidahu</title>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png">
+
+  <!-- Tailwind CSS CDN & Phosphor Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-sans selection:bg-slate-900 selection:text-white">
+
+  <!-- TOPBAR SISWA (SMANIDA SLATE) -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-slate-50 border border-slate-200 rounded-xl shadow-xs">
+          <img src="https://res.cloudinary.com/dq4snx0ml/image/upload/v1762918483/logosma_ppjhiz.png" alt="Logo SMAN 1 Cidahu" class="w-7 h-7 object-contain">
+        </div>
+        <div>
+          <h1 class="text-sm font-extrabold text-slate-900 leading-none">PORTAL BELAJAR SISWA</h1>
+          <span class="text-[11px] text-slate-400 font-medium">SMAN 1 Cidahu Kuningan</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <div class="hidden sm:flex flex-col text-right">
+          <span id="topNamaSiswa" class="text-xs font-bold text-slate-800">Memuat profil...</span>
+          <span id="topNisnSiswa" class="text-[10px] text-slate-400 font-mono">-</span>
+        </div>
+        <button id="logoutBtn" class="flex items-center gap-1.5 text-xs font-bold text-rose-600 hover:text-white px-3 py-2 rounded-xl border border-rose-200 hover:bg-rose-600 transition">
+          <i class="ph ph-sign-out text-base"></i>
+          <span class="hidden sm:inline">Keluar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- KONTEN UTAMA -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-6">
+
+    <!-- KARTU SAMBUTAN & IDENTITAS KELAS SISWA -->
+    <div class="bg-slate-900 text-white rounded-3xl p-6 shadow-md border border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[11px] font-semibold mb-2 border border-slate-700">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          Peserta Didik Aktif
+        </div>
+        <h2 id="greetSiswa" class="text-xl font-black tracking-tight">Halo, Siswa Smanida</h2>
+        <p class="text-xs text-slate-400 mt-1">Pantau materi pembelajaran dan riwayat kegiatan kelas Anda.</p>
+      </div>
+      <div class="flex items-center gap-3 text-center w-full sm:w-auto justify-between sm:justify-start">
+        <div class="bg-slate-800/80 rounded-2xl px-5 py-2.5 border border-slate-700/80 min-w-[90px]">
+          <p class="text-[10px] uppercase font-bold text-slate-400">Rombel Kelas</p>
+          <p id="badgeKelas" class="text-lg font-black text-amber-400">-</p>
+        </div>
+        <div class="bg-slate-800/80 rounded-2xl px-5 py-2.5 border border-slate-700/80 min-w-[90px]">
+          <p class="text-[10px] uppercase font-bold text-slate-400">Total Materi</p>
+          <p id="cntMateri" class="text-lg font-black text-emerald-400">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFIKASI TOAST -->
+    <div id="toastBox" class="hidden p-4 rounded-2xl text-xs font-bold flex items-center justify-between shadow-md transition-all">
+      <span id="toastMsg">Notifikasi</span>
+      <button onclick="document.getElementById('toastBox').classList.add('hidden')" class="text-slate-400 hover:text-slate-700">✕</button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      
+      <!-- DAFTAR MATA PELAJARAN DI KELAS -->
+      <section class="lg:col-span-4 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+        <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+          <span class="w-2 h-5 bg-slate-900 rounded-full"></span>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Mata Pelajaran & Guru Pengampu</h3>
+            <p class="text-[11px] text-slate-400">Guru yang bertugas di kelas Anda</p>
+          </div>
+        </div>
+
+        <div id="listMapelKelas" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center text-xs text-slate-400 animate-pulse">
+            Memuat daftar pelajaran...
+          </div>
+        </div>
+      </section>
+
+      <!-- RIWAYAT JURNAL / CATATAN PEMBELAJARAN KELAS -->
+      <section class="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h3 class="text-sm font-bold text-slate-900">Agenda & Materi KBM Kelas</h3>
+            <p class="text-xs text-slate-400">Catatan materi yang telah disampaikan bapak/ibu guru</p>
+          </div>
+          <button onclick="loadJurnalKelas()" class="text-xs font-bold text-slate-700 hover:text-slate-900 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200/80 transition self-start sm:self-auto">
+            <i class="ph ph-arrow-clockwise"></i> Segarkan
+          </button>
+        </div>
+
+        <!-- Filter Pencarian Materi -->
+        <div class="relative">
+          <i class="ph ph-magnifying-glass absolute left-3.5 top-3 text-slate-400"></i>
+          <input type="text" id="searchMateriInput" oninput="filterMateriSiswa()" placeholder="Cari materi pokok atau nama mata pelajaran..." class="w-full pl-10 pr-3 py-2.5 text-xs border border-slate-200 rounded-xl bg-slate-50 outline-none focus:bg-white focus:border-slate-900 transition">
+        </div>
+
+        <!-- Tabel Catatan Materi -->
+        <div class="overflow-x-auto border border-slate-100 rounded-2xl">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider text-[11px]">
+              <tr>
+                <th class="py-3 px-4 font-bold">Waktu</th>
+                <th class="py-3 px-4 font-bold">Mata Pelajaran & Guru</th>
+                <th class="py-3 px-4 font-bold">Materi & Ringkasan Kegiatan</th>
+              </tr>
+            </thead>
+            <tbody id="tabelMateriBody" class="divide-y divide-slate-100">
+              <tr><td colspan="3" class="py-6 text-center text-slate-400"><i class="ph ph-spinner animate-spin text-base"></i> Memuat catatan pembelajaran...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="mt-auto bg-white border-t border-slate-200/80 text-slate-400 text-xs py-4 px-4 text-center">
+    <span>© 2026 SMAN 1 Cidahu • Sistem Jurnal & Presensi KBM (Smanida Slate)</span>
+  </footer>
+
+  <script src="./js/config.js"></script>
+  <script>
+    let currentSiswa = null;
+    let dataKelasRecord = null;
+    let rawMateriList = [];
+
+    // 1. Validasi Hak Akses Siswa
+    async function cekAksesSiswa() {
+      const { data: { session } } = await db.auth.getSession();
+      if (!session) {
+        window.location.href = './index.html';
+        return;
+      }
+
+      const { data: profil, error } = await db
+        .from('profil_pengguna')
+        .select('*')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      if (error || !profil) {
+        alert('Gagal memverifikasi profil siswa.');
+        await db.auth.signOut();
+        window.location.href = './index.html';
+        return;
+      }
+
+      currentSiswa = profil;
+      document.getElementById('topNamaSiswa').textContent = profil.nama_lengkap;
+      document.getElementById('topNisnSiswa').textContent = profil.nomor_induk ? `NISN: ${profil.nomor_induk}` : '-';
+      document.getElementById('greetSiswa').textContent = `Halo, ${profil.nama_lengkap}`;
+      document.getElementById('badgeKelas').textContent = profil.kelas ? `Kelas ${profil.kelas}` : 'Belum Ditentukan';
+
+      if (!profil.kelas) {
+        document.getElementById('tabelMateriBody').innerHTML = `<tr><td colspan="3" class="py-8 text-center text-amber-600 font-medium">Akun Anda belum dipetakan ke rombel kelas oleh administrator. Hubungi kurikulum atau wali kelas.</td></tr>`;
+        document.getElementById('listMapelKelas').innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Data kelas tidak tersedia.</p>`;
+        return;
+      }
+
+      await loadInfoKelasDanMapel();
+      await loadJurnalKelas();
+    }
+
+    // 2. Tombol Keluar
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await db.auth.signOut();
+      localStorage.removeItem('kbm_user_profile');
+      window.location.href = './index.html';
+    });
+
+    // 3. Muat Data Mapel dan Guru di Kelas Siswa
+    async function loadInfoKelasDanMapel() {
+      const wadah = document.getElementById('listMapelKelas');
+
+      // Ambil id kelas dari master_kelas berdasarkan string kelas siswa
+      const { data: kData } = await db
+        .from('master_kelas')
+        .select('id, nama_kelas, tingkat, profil_pengguna(nama_lengkap)')
+        .eq('nama_kelas', currentSiswa.kelas)
+        .maybeSingle();
+
+      if (kData) {
+        dataKelasRecord = kData;
+      }
+
+      if (!dataKelasRecord) {
+        wadah.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Rombel ${currentSiswa.kelas} belum terdaftar di master kelas.</p>`;
+        return;
+      }
+
+      // Ambil penugasan guru di kelas ini
+      const { data: penugasan, error } = await db
+        .from('penugasan_guru_mapel')
+        .select(`
+          id,
+          profil_pengguna (nama_lengkap),
+          master_mapel (nama_mapel, kode_mapel, kelompok)
+        `)
+        .eq('kelas_id', dataKelasRecord.id);
+
+      if (error || !penugasan || !penugasan.length) {
+        wadah.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Belum ada distribusi penugasan guru di rombel ini.</p>`;
+        return;
+      }
+
+      wadah.innerHTML = penugasan.map(p => `
+        <div class="p-3 rounded-2xl bg-slate-50 border border-slate-100/80 hover:bg-white hover:shadow-xs transition">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[10px] font-mono font-bold text-slate-700 bg-slate-200/80 px-2 py-0.5 rounded">${p.master_mapel?.kode_mapel || '-'}</span>
+            <span class="text-[10px] text-slate-400">${p.master_mapel?.kelompok || 'Umum'}</span>
+          </div>
+          <h4 class="text-xs font-bold text-slate-800 leading-snug">${p.master_mapel?.nama_mapel || '-'}</h4>
+          <p class="text-[11px] text-slate-500 mt-0.5 flex items-center gap-1">
+            <i class="ph ph-user text-xs"></i> ${p.profil_pengguna?.nama_lengkap || 'Belum ditugaskan'}
+          </p>
+        </div>
+      `).join('');
+    }
+
+    // 4. Muat Jurnal Pembelajaran Kelas Siswa
+    async function loadJurnalKelas() {
+      const tbody = document.getElementById('tabelMateriBody');
+      tbody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-slate-400"><i class="ph ph-spinner animate-spin text-base"></i> Memuat catatan pembelajaran...</td></tr>`;
+
+      if (!dataKelasRecord) {
+        const { data: kData } = await db
+          .from('master_kelas')
+          .select('id')
+          .eq('nama_kelas', currentSiswa.kelas)
+          .maybeSingle();
+        if (kData) dataKelasRecord = kData;
+      }
+
+      if (!dataKelasRecord) {
+        tbody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-slate-400">Kelas tidak ditemukan.</td></tr>`;
+        return;
+      }
+
+      const { data, error } = await db
+        .from('jurnal_kbm')
+        .select(`
+          id,
+          tanggal,
+          jam_ke,
+          materi,
+          kegiatan,
+          profil_pengguna (nama_lengkap),
+          master_mapel (nama_mapel, kode_mapel)
+        `)
+        .eq('kelas_id', dataKelasRecord.id)
+        .order('tanggal', { ascending: false });
+
+      if (error) {
+        tbody.innerHTML = `<tr><td colspan="3" class="py-6 text-center text-rose-500">Error: ${error.message}</td></tr>`;
+        return;
+      }
+
+      rawMateriList = data || [];
+      document.getElementById('cntMateri').textContent = rawMateriList.length;
+      renderMateriTabel(rawMateriList);
+    }
+
+    function renderMateriTabel(data) {
+      const tbody = document.getElementById('tabelMateriBody');
+
+      if (!data.length) {
+        tbody.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-slate-400">Belum ada agenda materi yang dicatat untuk kelas ini.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = data.map(j => {
+        const tglFmt = new Date(j.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+        return `
+          <tr class="hover:bg-slate-50/80 transition">
+            <td class="py-3 px-4 whitespace-nowrap">
+              <span class="font-bold text-slate-900 block">${tglFmt}</span>
+              <span class="text-[11px] text-slate-400 font-medium">Jam ${j.jam_ke}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="font-bold text-slate-800 block">${j.master_mapel?.nama_mapel || '-'}</span>
+              <span class="text-[11px] text-slate-500">${j.profil_pengguna?.nama_lengkap || '-'}</span>
+            </td>
+            <td class="py-3 px-4">
+              <span class="font-extrabold text-slate-900 block">${j.materi}</span>
+              <p class="text-slate-600 text-xs mt-0.5 line-clamp-2">${j.kegiatan || '-'}</p>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 5. Filter Pencarian Materi
+    function filterMateriSiswa() {
+      const kw = (document.getElementById('searchMateriInput').value || '').toLowerCase().trim();
+      const filtered = rawMateriList.filter(m => {
+        return (m.materi || '').toLowerCase().includes(kw) ||
+               (m.master_mapel?.nama_mapel || '').toLowerCase().includes(kw) ||
+               (m.profil_pengguna?.nama_lengkap || '').toLowerCase().includes(kw) ||
+               (m.kegiatan || '').toLowerCase().includes(kw);
+      });
+      renderMateriTabel(filtered);
+    }
+
+    // Inisialisasi awal
+    cekAksesSiswa();
+  </script>
+</body>
+</html>
